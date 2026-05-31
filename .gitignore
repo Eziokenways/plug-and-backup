@@ -1,0 +1,29 @@
+# Build outputs and release assets
+dist/
+*.exe
+
+# Local runtime data
+UsbPhotoBackup/
+config.json
+manifest.json
+last-backup.json
+diagnostics.txt
+logs/
+*.log
+
+# PowerShell and editor artifacts
+*.ps1xml
+*.psm1~
+*.ps1~
+*.tmp
+*.temp
+*.bak
+*.orig
+.vscode/
+.idea/
+
+# OS artifacts
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+System Volume Information/
