@@ -1,5 +1,11 @@
 ﻿# 随插备份 / Plug & Backup
 
+<p align="center">
+  <img src="assets/usb-backup.png" alt="随插备份 / Plug & Backup" width="160">
+</p>
+
+[English README](./README.en.md)
+
 一个 Windows 便携托盘工具，用来自动备份 U 盘、读卡器、相机内存卡和外接移动硬盘中的照片、视频和相机 RAW 文件。
 
 它的目标很简单：插入设备，确认信任，然后把媒体文件安全地复制到你的备份目录。程序只复制文件，不删除原文件，默认也不会向内存卡或 USB 设备写入隐藏标记文件。
@@ -102,15 +108,6 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Build-PortableExe.ps1
 ```
 
 输出文件位于 `dist\`。构建说明见 [BUILD.md](./BUILD.md)。
-
-## 发布文件
-
-GitHub Release 建议附带：
-
-- `PlugAndBackup.exe`
-- `README.md`
-- `CHANGELOG.md`
-- `SHA256SUMS.txt`
 
 ## 许可证
 
