@@ -1,13 +1,14 @@
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = "Stop"
 
-$AppVersion = "1.0.0"
-$ExeVersion = "1.0.0.0"
+$AppVersion = "1.0.1"
+$ExeVersion = "1.0.1.0"
 $ProductName = "Plug & Backup"
 $ScriptPath = Join-Path $PSScriptRoot "UsbPhotoBackup.ps1"
 $IconPath = Join-Path (Join-Path $PSScriptRoot "assets") "usb-backup.ico"
 $DistDir = Join-Path $PSScriptRoot "dist"
-$OutputPath = Join-Path $DistDir "PlugAndBackup.exe"
+$OutputFileName = "PlugAndBackup-v$AppVersion.exe"
+$OutputPath = Join-Path $DistDir $OutputFileName
 $ChecksumPath = Join-Path $DistDir "SHA256SUMS.txt"
 
 if (-not [System.IO.File]::Exists($ScriptPath)) {
@@ -27,6 +28,10 @@ if (-not [System.IO.Directory]::Exists($DistDir)) {
     [System.IO.Directory]::CreateDirectory($DistDir) | Out-Null
 }
 
+Get-ChildItem -LiteralPath $DistDir -File |
+    Where-Object { $_.Name -like "PlugAndBackup*.exe" -or $_.Name -in @("README.md", "CHANGELOG.md", "SHA256SUMS.txt") -or $_.Name -like "RELEASE_NOTES_v*.md" } |
+    Remove-Item -Force
+
 Invoke-ps2exe `
     -inputFile $ScriptPath `
     -outputFile $OutputPath `
@@ -41,11 +46,13 @@ Invoke-ps2exe `
 
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot "README.md") -Destination (Join-Path $DistDir "README.md") -Force
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot "CHANGELOG.md") -Destination (Join-Path $DistDir "CHANGELOG.md") -Force
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot "RELEASE_NOTES_v$AppVersion.md") -Destination (Join-Path $DistDir "RELEASE_NOTES_v$AppVersion.md") -Force
 
 $releaseFiles = @(
-    "PlugAndBackup.exe",
+    $OutputFileName,
     "README.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "RELEASE_NOTES_v$AppVersion.md"
 )
 $checksumLines = foreach ($fileName in $releaseFiles) {
     $filePath = Join-Path $DistDir $fileName

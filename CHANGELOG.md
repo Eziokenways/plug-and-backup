@@ -1,4 +1,11 @@
-﻿# Changelog
+# Changelog
+
+## 1.0.1
+
+- Changed backup-folder validation so an offline NAS or network backup path no longer forces folder selection at app startup after a folder has already been configured.
+- Added a delayed prompt that appears only when a device is ready to back up and the configured backup folder is offline or not writable.
+- Added choices to skip backup for the current device insertion or choose another backup folder and continue.
+- Updated the portable exe release filename to include the version number.
 
 ## 1.0.0
 

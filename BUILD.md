@@ -1,6 +1,6 @@
 ﻿# Build
 
-随插备份 / Plug & Backup 1.0 建议打包为便携单 exe，不做传统安装器。
+随插备份 / Plug & Backup 1.0.1 建议打包为便携单 exe，不做传统安装器。
 
 ## Output
 
@@ -8,9 +8,10 @@
 
 ```text
 dist\
-  PlugAndBackup.exe
+  PlugAndBackup-v1.0.1.exe
   README.md
   CHANGELOG.md
+  SHA256SUMS.txt
 ```
 
 程序运行时仍使用以下本机数据目录，打包不会改变它们：
@@ -41,9 +42,9 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Build-PortableExe.ps1
 构建脚本会使用：
 
 - 入口脚本：`UsbPhotoBackup.ps1`
-- exe 名称：`PlugAndBackup.exe`
+- exe 名称：`PlugAndBackup-v1.0.1.exe`
 - 图标：`assets\usb-backup.ico`
-- 版本：`1.0.0`
+- 版本：`1.0.1`
 - 无控制台窗口
 - STA 模式，保证 Windows Forms 托盘和剪贴板功能正常
 

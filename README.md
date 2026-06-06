@@ -12,11 +12,11 @@
 
 ## 下载
 
-请从 GitHub Releases 下载 `PlugAndBackup.exe`。
+请从 GitHub Releases 下载 `PlugAndBackup-v1.0.1.exe`。
 
 - 便携版，无需安装。
 - 运行时不需要额外软件。
-- 1.0 版本未做代码签名，首次运行时 Windows SmartScreen 可能会提示风险，这是未签名软件的常见现象。
+- 当前版本未做代码签名，首次运行时 Windows SmartScreen 可能会提示风险，这是未签名软件的常见现象。
 
 ## 主要功能
 
@@ -43,7 +43,7 @@
 
 ## 快速使用
 
-1. 下载并运行 `PlugAndBackup.exe`。
+1. 下载并运行 `PlugAndBackup-v1.0.1.exe`。
 2. 首次启动时选择备份文件夹。
 3. 在设置窗口中按需要调整备份模式和归档选项。
 4. 插入 USB 设备、读卡器或移动硬盘。

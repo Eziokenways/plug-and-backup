@@ -12,11 +12,11 @@ Its goal is simple: insert a device, confirm trust, and safely copy media files 
 
 ## Download
 
-Download `PlugAndBackup.exe` from GitHub Releases.
+Download `PlugAndBackup-v1.0.1.exe` from GitHub Releases.
 
 - Portable app, no installer required.
 - No extra runtime software required.
-- Version 1.0 is not code-signed. Windows SmartScreen may show a warning on first launch, which is common for unsigned software.
+- The current version is not code-signed. Windows SmartScreen may show a warning on first launch, which is common for unsigned software.
 
 ## Highlights
 
@@ -43,7 +43,7 @@ Supported formats can be customized in the settings window.
 
 ## Quick Start
 
-1. Download and run `PlugAndBackup.exe`.
+1. Download and run `PlugAndBackup-v1.0.1.exe`.
 2. Choose a backup folder on first launch.
 3. Adjust backup mode and archive options in the settings window if needed.
 4. Insert a USB device, card reader, or external hard drive.

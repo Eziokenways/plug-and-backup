@@ -570,7 +570,7 @@ function T {
 }
 
 $AppName = T "AppName"
-$AppVersion = "1.0.0"
+$AppVersion = "1.0.1"
 $MarkerFileName = ".usb-photo-backup-device.json"
 $PhotoExtensions = @(".jpg", ".jpeg", ".png", ".heic", ".webp", ".gif", ".bmp", ".tif", ".tiff")
 $VideoExtensions = @(".mp4", ".mov", ".avi", ".mkv", ".m4v", ".3gp", ".wmv", ".mts", ".m2ts")
