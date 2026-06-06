@@ -343,6 +343,10 @@ $script:UiText = @{
         ChooseBackupBeforeStart = "Please choose a backup folder before USB backup can start."
         BackupFolderNotWritable = "The backup folder is not writable. Please choose another folder."
         ChooseWritableBackupFolder = "Choose a writable backup folder."
+        BackupRootUnavailableTitle = "Backup folder unavailable"
+        BackupRootUnavailableMessage = "The configured backup folder is offline or not writable.`r`n`r`nBackup folder:`r`n{0}`r`n`r`nDrive waiting for backup:`r`n{1}`r`n`r`nChoose another backup folder to continue, or skip backup for this device until it is unplugged and inserted again."
+        SkipBackupForNow = "Skip backup for now"
+        ChooseAnotherBackupFolder = "Choose another backup folder"
         NoLabel = "(no label)"
         TrustMessage = "Trust this drive for automatic photo and video backup?`r`n`r`nDrive: {0}`r`nLabel: {1}`r`n`r`nNo files will be written to the card or drive."
         PossibleTrustMessage = "This looks like a previously trusted source, but some identifiers changed.`r`n`r`nDrive: {0}`r`nLabel: {1}`r`nMatched source: {2}`r`n`r`nTrust this source and update its local fingerprint?"
@@ -444,6 +448,10 @@ $script:UiText = @{
         ChooseBackupBeforeStart = "开始 USB 备份前，请先选择一个备份文件夹。"
         BackupFolderNotWritable = "当前备份文件夹不可写，请选择另一个文件夹。"
         ChooseWritableBackupFolder = "请选择一个可写的备份文件夹。"
+        BackupRootUnavailableTitle = "备份文件夹不可用"
+        BackupRootUnavailableMessage = "当前设置的备份文件夹离线或不可写。`r`n`r`n备份文件夹：`r`n{0}`r`n`r`n等待备份的磁盘：`r`n{1}`r`n`r`n可以重新选择备份位置继续，也可以暂不备份此设备，直到拔出后重新插入。"
+        SkipBackupForNow = "暂不备份"
+        ChooseAnotherBackupFolder = "重新选择备份位置"
         NoLabel = "（无卷标）"
         TrustMessage = "是否信任此磁盘，并用于自动备份照片和视频？`r`n`r`n磁盘：{0}`r`n卷标：{1}`r`n`r`n不会向内存卡或磁盘写入任何文件。"
         PossibleTrustMessage = "这看起来像之前信任过的来源，但部分标识发生了变化。`r`n`r`n磁盘：{0}`r`n卷标：{1}`r`n匹配来源：{2}`r`n`r`n是否信任此来源并更新本机指纹？"
@@ -1016,8 +1024,29 @@ function Select-BackupRoot {
     return $false
 }
 
-function Ensure-BackupRoot {
-    if ([string]::IsNullOrWhiteSpace($script:Config.BackupRoot) -or -not [System.IO.Directory]::Exists($script:Config.BackupRoot)) {
+function Test-BackupRootWritable {
+    if ([string]::IsNullOrWhiteSpace($script:Config.BackupRoot)) {
+        return $false
+    }
+
+    try {
+        if (-not [System.IO.Directory]::Exists($script:Config.BackupRoot)) {
+            return $false
+        }
+
+        $probe = Join-Path $script:Config.BackupRoot ".usb-photo-backup-write-test.tmp"
+        Set-Content -LiteralPath $probe -Value "test" -Encoding ASCII
+        Remove-Item -LiteralPath $probe -Force
+        return $true
+    }
+    catch {
+        Write-Log -Level "WARN" -Message "Backup root unavailable or not writable '$($script:Config.BackupRoot)': $($_.Exception.Message)"
+        return $false
+    }
+}
+
+function Ensure-InitialBackupRoot {
+    if ([string]::IsNullOrWhiteSpace($script:Config.BackupRoot)) {
         [System.Windows.Forms.MessageBox]::Show(
             (T "ChooseBackupBeforeStart"),
             $AppName,
@@ -1030,23 +1059,116 @@ function Ensure-BackupRoot {
         }
     }
 
-    try {
-        Ensure-Directory -Path $script:Config.BackupRoot
-        $probe = Join-Path $script:Config.BackupRoot ".usb-photo-backup-write-test.tmp"
-        Set-Content -LiteralPath $probe -Value "test" -Encoding ASCII
-        Remove-Item -LiteralPath $probe -Force
+    return $true
+}
+
+function Show-BackupRootUnavailableDialog {
+    param(
+        [Parameter(Mandatory = $true)][string]$DriveRoot
+    )
+
+    $form = New-Object System.Windows.Forms.Form
+    $form.Text = T "BackupRootUnavailableTitle"
+    $form.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
+    $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
+    $form.MaximizeBox = $false
+    $form.MinimizeBox = $false
+    $form.ClientSize = New-Object System.Drawing.Size -ArgumentList 560, 210
+    $form.Icon = Get-TrayIcon
+    $form.Font = New-Object System.Drawing.Font -ArgumentList "Segoe UI", 9
+    $form.Tag = "Skip"
+
+    $messageLabel = New-Object System.Windows.Forms.Label
+    $messageLabel.Text = T "BackupRootUnavailableMessage" -FormatArgs @([string]$script:Config.BackupRoot, $DriveRoot)
+    $messageLabel.Location = New-Object System.Drawing.Point -ArgumentList 18, 18
+    $messageLabel.Size = New-Object System.Drawing.Size -ArgumentList 524, 132
+    $form.Controls.Add($messageLabel)
+
+    $chooseButton = New-Object System.Windows.Forms.Button
+    $chooseButton.Text = T "ChooseAnotherBackupFolder"
+    $chooseButton.Location = New-Object System.Drawing.Point -ArgumentList 286, 164
+    $chooseButton.Size = New-Object System.Drawing.Size -ArgumentList 250, 32
+    $chooseButton.Add_Click({ param($sender, $eventArgs) $sender.FindForm().Tag = "Choose"; $sender.FindForm().Close() })
+    $form.Controls.Add($chooseButton)
+    $form.AcceptButton = $chooseButton
+
+    $skipButton = New-Object System.Windows.Forms.Button
+    $skipButton.Text = T "SkipBackupForNow"
+    $skipButton.Location = New-Object System.Drawing.Point -ArgumentList 18, 164
+    $skipButton.Size = New-Object System.Drawing.Size -ArgumentList 250, 32
+    $skipButton.Add_Click({ param($sender, $eventArgs) $sender.FindForm().Tag = "Skip"; $sender.FindForm().Close() })
+    $form.Controls.Add($skipButton)
+    $form.CancelButton = $skipButton
+
+    [void]$form.ShowDialog()
+    $decision = [string]$form.Tag
+    $form.Dispose()
+    return $decision
+}
+
+function Resolve-BackupRootForBackup {
+    param([Parameter(Mandatory = $true)][System.IO.DriveInfo]$Drive)
+
+    $root = $Drive.RootDirectory.FullName
+    if ($script:IgnoredRoots.ContainsKey($root)) {
+        return $false
+    }
+
+    if ([string]::IsNullOrWhiteSpace($script:Config.BackupRoot)) {
+        if (-not (Ensure-InitialBackupRoot)) {
+            return $false
+        }
+    }
+
+    if (Test-BackupRootWritable) {
         return $true
     }
-    catch {
-        Write-Log -Level "ERROR" -Message "Backup root is not writable: $($_.Exception.Message)"
+
+    Write-Log -Level "WARN" -Message "Backup root unavailable before backing up '$root': '$($script:Config.BackupRoot)'"
+    $decision = Show-BackupRootUnavailableDialog -DriveRoot $root
+    if ($decision -ne "Choose") {
+        $script:IgnoredRoots[$root] = $true
+        Write-Log -Message "User skipped backup for '$root' because backup root is unavailable"
+        return $false
+    }
+
+    while ($true) {
+        if (-not (Select-BackupRoot -Description (T "ChooseWritableBackupFolder"))) {
+            $script:IgnoredRoots[$root] = $true
+            Write-Log -Message "User canceled backup folder selection for '$root'; skipping until reinsertion"
+            return $false
+        }
+
+        if (Test-BackupRootWritable) {
+            Write-Log -Message "Backup root changed and verified for '$root': '$($script:Config.BackupRoot)'"
+            return $true
+        }
+
         [System.Windows.Forms.MessageBox]::Show(
             (T "BackupFolderNotWritable"),
             $AppName,
             [System.Windows.Forms.MessageBoxButtons]::OK,
             [System.Windows.Forms.MessageBoxIcon]::Error
         ) | Out-Null
-        return (Select-BackupRoot -Description (T "ChooseWritableBackupFolder"))
     }
+}
+
+function Ensure-BackupRoot {
+    if (-not (Ensure-InitialBackupRoot)) {
+        return $false
+    }
+
+    if (Test-BackupRootWritable) {
+        return $true
+    }
+
+    [System.Windows.Forms.MessageBox]::Show(
+        (T "BackupFolderNotWritable"),
+        $AppName,
+        [System.Windows.Forms.MessageBoxButtons]::OK,
+        [System.Windows.Forms.MessageBoxIcon]::Error
+    ) | Out-Null
+    return (Select-BackupRoot -Description (T "ChooseWritableBackupFolder"))
 }
 
 function Normalize-DriveRoot {
@@ -2620,10 +2742,6 @@ function Invoke-ScanAll {
             return
         }
 
-        if (-not (Ensure-BackupRoot)) {
-            return
-        }
-
         $drives = @(Get-CandidateDrives)
         $seenRoots = @{}
         foreach ($drive in $drives) {
@@ -2640,6 +2758,10 @@ function Invoke-ScanAll {
 
             if ($trusted) {
                 if (-not $Force -and [string]$script:Config.BackupStartMode -eq "ConfirmBeforeBackup" -and -not (Confirm-BackupStart -Drive $drive)) {
+                    continue
+                }
+
+                if (-not (Resolve-BackupRootForBackup -Drive $drive)) {
                     continue
                 }
 
@@ -3723,7 +3845,7 @@ function Start-App {
         Load-LastBackupResult
         $script:NotifyIcon = New-TrayIcon
 
-        if (-not (Ensure-BackupRoot)) {
+        if (-not (Ensure-InitialBackupRoot)) {
             Write-Log -Level "WARN" -Message "No backup root selected. Exiting."
             return
         }
